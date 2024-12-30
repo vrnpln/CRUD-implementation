@@ -2,37 +2,40 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-var task string //обновляем переменную task через POST-запрос, а затем возвращаем обновленное значение при GET-запросе
+func CreateMessage(w http.ResponseWriter, r *http.Request) {
+	var message Message
 
-type requestBody struct {
-	Message string `json:"message"`
+	// Декодирование JSON в структуру Message
+	json.NewDecoder(r.Body).Decode(&message)
+	// Сохранение в БД
+	DB.Create(&message)
+	// Кодирирование структуры Message в JSON и отправка
+	json.NewEncoder(w).Encode(message)
 }
 
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello, %s", task)
-}
+func GetMessages(w http.ResponseWriter, r *http.Request) {
+	var messages []Message
 
-func PostHandler(w http.ResponseWriter, r *http.Request) {
-	var reqBody requestBody
-
-	json.NewDecoder(r.Body).Decode(&reqBody)
-
-	task = reqBody.Message
-	fmt.Fprintln(w, task)
-
+	// Получение всех записей из БД
+	DB.Find(&messages)
+	// Кодирование в JSON и отправка
+	json.NewEncoder(w).Encode(messages)
 }
 
 func main() {
+	// Вызываем метод InitDB() из файла db.go
+	InitDB()
+
+	// Автоматическая миграция модели Message
+	DB.AutoMigrate(&Message{})
+
 	router := mux.NewRouter()
-
-	router.HandleFunc("/api/hello", HelloHandler).Methods("GET")
-	router.HandleFunc("/api/hello", PostHandler).Methods("POST")
-
+	router.HandleFunc("/api/messages", CreateMessage).Methods("POST")
+	router.HandleFunc("/api/messages", GetMessages).Methods("GET")
 	http.ListenAndServe(":8080", router)
 }
