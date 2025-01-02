@@ -31,11 +31,11 @@ func UpdateMessages(w http.ResponseWriter, r *http.Request) {
 	var message Message
 
 	// Получение переменных из маршрута
-	vars:= mux.Vars(r)
+	vars := mux.Vars(r)
 	// Получение ID из переменных маршрута
 	id := vars["id"]
 	// Поиск задачи по ID
-	DB.First(&message,id)
+	DB.First(&message, id)
 
 	// Кодирирование структуры Message в JSON и отправка
 	json.NewDecoder(r.Body).Decode(&message)
@@ -45,18 +45,20 @@ func UpdateMessages(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-func DeleteMessages( w http.ResponseWriter, r *http.Request) {
+func DeleteMessages(w http.ResponseWriter, r *http.Request) {
 	var message Message
 
 	// Получение переменных из маршрута
-	vars:= mux.Vars(r)
+	vars := mux.Vars(r)
 	// Получение ID из переменных маршрута
 	id := vars["id"]
 	// Поиск задачи по ID
-	DB.First(&message,id)
+	DB.First(&message, id)
 
 	// Удаление найденной задачи в БД
 	DB.Delete(&message)
+	// Возврат кода 204
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func main() {
@@ -69,7 +71,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/messages", CreateMessage).Methods("POST")
 	router.HandleFunc("/api/messages", GetMessages).Methods("GET")
-	router.HandleFunc("/api/messages/{id}", UpdateMessages).Methods("PATCH")
-	router.HandleFunc("/api/messages/{id}", DeleteMessages).Methods("DELETE")
+	router.HandleFunc("/api/messages/id", UpdateMessages).Methods("PATCH")
+	router.HandleFunc("/api/messages/id", DeleteMessages).Methods("DELETE")
 	http.ListenAndServe(":8080", router)
 }
