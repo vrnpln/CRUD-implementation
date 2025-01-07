@@ -1,4 +1,4 @@
-module Task2
+module Project1
 
 go 1.23.4
 
